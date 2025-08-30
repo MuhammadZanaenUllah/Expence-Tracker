@@ -18,6 +18,12 @@ interface Subscription {
 interface UserStats {
   totalExpenses: number
   currentMonthExpenses: number
+  totalIncome: number
+  currentMonthIncome: number
+}
+
+interface ExpenseData {
+  date: string
 }
 
 export default function Subscription() {
@@ -57,14 +63,20 @@ export default function Subscription() {
       const response = await fetch('/api/dashboard/stats')
       if (response.ok) {
         const data = await response.json()
+        
+        // Calculate current month expenses and income
+        const now = new Date()
+        const currentMonthExpenses = data.recentExpenses?.filter((expense: ExpenseData) => {
+          const expenseDate = new Date(expense.date)
+          return expenseDate.getMonth() === now.getMonth() && 
+                 expenseDate.getFullYear() === now.getFullYear()
+        }).length || 0
+        
         setUserStats({
-          totalExpenses: data.expenses?.length || 0,
-          currentMonthExpenses: data.expenses?.filter((expense: any) => {
-            const expenseDate = new Date(expense.date)
-            const now = new Date()
-            return expenseDate.getMonth() === now.getMonth() && 
-                   expenseDate.getFullYear() === now.getFullYear()
-          }).length || 0
+          totalExpenses: data.subscription?.expenseCount || 0,
+          currentMonthExpenses,
+          totalIncome: data.totalIncome || 0,
+          currentMonthIncome: data.totalIncome || 0 // Using total for now since we don't have recent income data
         })
       }
     } catch (error) {
@@ -196,7 +208,7 @@ export default function Subscription() {
               </div>
               {usagePercentage >= 90 && (
                 <p className="text-sm text-red-600 mt-2">
-                  You're approaching your expense limit. Consider upgrading to Pro.
+                  You&apos;re approaching your expense limit. Consider upgrading to Pro.
                 </p>
               )}
             </div>

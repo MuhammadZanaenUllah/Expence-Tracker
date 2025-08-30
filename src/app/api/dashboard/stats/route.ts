@@ -42,11 +42,26 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Calculate total spending
-    const totalSpending = expenses.reduce((sum: number, expense: any) => sum + expense.amount, 0)
+    // Get income for the period
+    const incomes = await prisma.income.findMany({
+      where: {
+        userId: session.user.id,
+        date: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      include: {
+        category: true
+      }
+    })
 
-    // Group by category for pie chart
-    const categoryStats = expenses.reduce((acc: Record<string, any>, expense: any) => {
+    // Calculate total spending and income
+    const totalSpending = expenses.reduce((sum: number, expense: any) => sum + expense.amount, 0)
+    const totalIncome = incomes.reduce((sum: number, income: any) => sum + income.amount, 0)
+
+    // Group expenses by category for pie chart
+    const expenseCategoryStats = expenses.reduce((acc: Record<string, any>, expense: any) => {
       const categoryName = expense.category.name
       if (!acc[categoryName]) {
         acc[categoryName] = {
@@ -60,12 +75,38 @@ export async function GET(request: NextRequest) {
       return acc
     }, {} as Record<string, any>)
 
-    // Get monthly trend data for line chart
-    const monthlyTrend = await prisma.$queryRaw`
+    // Group income by category for pie chart
+    const incomeCategoryStats = incomes.reduce((acc: Record<string, any>, income: any) => {
+      const categoryName = income.category.name
+      if (!acc[categoryName]) {
+        acc[categoryName] = {
+          name: categoryName,
+          amount: 0,
+          color: income.category.color,
+          icon: income.category.icon
+        }
+      }
+      acc[categoryName].amount += income.amount
+      return acc
+    }, {} as Record<string, any>)
+
+    // Get monthly trend data for line chart (expenses and income)
+    const expenseMonthlyTrend = await prisma.$queryRaw`
       SELECT 
         DATE_TRUNC('month', date) as month,
         SUM(amount) as total
       FROM "Expense"
+      WHERE "userId" = ${session.user.id}
+        AND date >= ${new Date(endDate.getFullYear() - 1, endDate.getMonth(), 1)}
+      GROUP BY DATE_TRUNC('month', date)
+      ORDER BY month ASC
+    `
+
+    const incomeMonthlyTrend = await prisma.$queryRaw`
+      SELECT 
+        DATE_TRUNC('month', date) as month,
+        SUM(amount) as total
+      FROM "Income"
       WHERE "userId" = ${session.user.id}
         AND date >= ${new Date(endDate.getFullYear() - 1, endDate.getMonth(), 1)}
       GROUP BY DATE_TRUNC('month', date)
@@ -97,8 +138,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       totalSpending,
-      categoryStats: Object.values(categoryStats),
-      monthlyTrend,
+      totalIncome,
+      expenseCategoryStats: Object.values(expenseCategoryStats),
+      incomeCategoryStats: Object.values(incomeCategoryStats),
+      expenseMonthlyTrend,
+      incomeMonthlyTrend,
       recentExpenses,
       subscription: {
         plan: subscription?.plan || 'FREE',

@@ -16,7 +16,7 @@ export const SUPPORTED_CURRENCIES = {
 export type Currency = keyof typeof SUPPORTED_CURRENCIES
 
 // Exchange rates cache (in a real app, this would be fetched from an API)
-let exchangeRatesCache: Record<string, number> = {
+const exchangeRatesCache: Record<string, number> = {
   USD: 1, // Base currency
   EUR: 0.85,
   GBP: 0.73,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { updateUserRole, deleteUser } from '@/lib/admin';
+
 import { useRouter } from 'next/navigation';
 
 interface User {

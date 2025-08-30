@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
@@ -12,12 +13,14 @@ import {
   LogOut,
   CreditCard,
   User,
-  Shield
+  Shield,
+  DollarSign
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Expenses', href: '/expenses', icon: Receipt },
+  { name: 'Income', href: '/income', icon: DollarSign },
   { name: 'Categories', href: '/categories', icon: Tags },
   { name: 'Subscription', href: '/subscription', icon: CreditCard },
   { name: 'Settings', href: '/settings', icon: Settings },
@@ -104,9 +107,11 @@ export default function Sidebar() {
         <div className="flex items-center space-x-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
             {session?.user?.image ? (
-              <img
+              <Image
                 src={session.user.image}
                 alt="Profile"
+                width={32}
+                height={32}
                 className="h-8 w-8 rounded-full"
               />
             ) : (

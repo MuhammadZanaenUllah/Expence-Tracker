@@ -10,7 +10,7 @@ import { getCurrencyOptions, Currency } from '@/lib/currency'
 export default function SettingsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+
   const [userCurrency, setUserCurrency] = useState<Currency>('USD')
   const [isSaving, setIsSaving] = useState(false)
 

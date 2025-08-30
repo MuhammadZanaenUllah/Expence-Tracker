@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
@@ -21,6 +21,7 @@ interface Expense {
   description?: string
   date: string
   category: Category
+  currency?: string
 }
 
 interface ExpenseFormData {
@@ -58,13 +59,7 @@ export default function Expenses() {
     }
   }, [status])
 
-  useEffect(() => {
-    if (session) {
-      fetchExpenses()
-      fetchCategories()
-      fetchUserCurrency()
-    }
-  }, [session, selectedCategory, dateRange])
+
 
   const fetchUserCurrency = async () => {
     try {
@@ -79,7 +74,7 @@ export default function Expenses() {
     }
   }
 
-  const fetchExpenses = async () => {
+  const fetchExpenses = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (selectedCategory) params.append('categoryId', selectedCategory)
@@ -96,7 +91,7 @@ export default function Expenses() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedCategory, dateRange.start, dateRange.end])
 
   const fetchCategories = async () => {
     try {
@@ -109,6 +104,14 @@ export default function Expenses() {
       console.error('Error fetching categories:', error)
     }
   }
+
+  useEffect(() => {
+    if (session) {
+      fetchExpenses()
+      fetchCategories()
+      fetchUserCurrency()
+    }
+  }, [session, selectedCategory, dateRange, fetchExpenses])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -158,7 +161,7 @@ export default function Expenses() {
       description: expense.description || '',
       categoryId: expense.category.id,
       date: new Date(expense.date).toISOString().split('T')[0],
-      currency: (expense as any).currency || userCurrency
+      currency: expense.currency || userCurrency
     })
     setShowModal(true)
   }

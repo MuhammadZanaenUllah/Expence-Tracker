@@ -60,6 +60,26 @@ async function main() {
     })
   }
 
+  // Create default income categories
+  const incomeCategories = [
+    { name: 'Salary', color: '#10B981', icon: '💼' },
+    { name: 'Freelance', color: '#059669', icon: '💻' },
+    { name: 'Business', color: '#047857', icon: '🏢' },
+    { name: 'Investment', color: '#065F46', icon: '📈' },
+    { name: 'Rental', color: '#064E3B', icon: '🏠' },
+    { name: 'Bonus', color: '#6EE7B7', icon: '🎁' },
+    { name: 'Commission', color: '#34D399', icon: '💰' },
+    { name: 'Other Income', color: '#A7F3D0', icon: '💵' }
+  ]
+
+  for (const category of incomeCategories) {
+    await prisma.incomeCategory.upsert({
+      where: { name: category.name },
+      update: {},
+      create: category
+    })
+  }
+
   console.log('Database seeded successfully!')
 }
 

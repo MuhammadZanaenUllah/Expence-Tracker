@@ -33,13 +33,24 @@ ChartJS.register(
 
 interface DashboardStats {
   totalSpending: number
-  categoryStats: Array<{
+  totalIncome: number
+  expenseCategoryStats: Array<{
     name: string
     amount: number
     color: string
     icon: string
   }>
-  monthlyTrend: Array<{
+  incomeCategoryStats: Array<{
+    name: string
+    amount: number
+    color: string
+    icon: string
+  }>
+  expenseMonthlyTrend: Array<{
+    month: string
+    total: number
+  }>
+  incomeMonthlyTrend: Array<{
     month: string
     total: number
   }>
@@ -120,13 +131,27 @@ export default function Dashboard() {
     return null
   }
 
-  // Prepare chart data
-  const pieChartData = {
-    labels: stats?.categoryStats.map(cat => cat.name) || [],
+  // Prepare expense chart data
+  const expensePieChartData = {
+    labels: stats?.expenseCategoryStats.map((cat: any) => cat.name) || [],
     datasets: [
       {
-        data: stats?.categoryStats.map(cat => cat.amount) || [],
-        backgroundColor: stats?.categoryStats.map(cat => cat.color) || [],
+        data: stats?.expenseCategoryStats.map((cat: any) => cat.amount) || [],
+        backgroundColor: stats?.expenseCategoryStats.map((cat: any) => cat.color) || [],
+        borderWidth: 2,
+        borderColor: '#ffffff',
+        hoverOffset: 4,
+      },
+    ],
+  }
+
+  // Prepare income chart data
+  const incomePieChartData = {
+    labels: stats?.incomeCategoryStats.map((cat: any) => cat.name) || [],
+    datasets: [
+      {
+        data: stats?.incomeCategoryStats.map((cat: any) => cat.amount) || [],
+        backgroundColor: stats?.incomeCategoryStats.map((cat: any) => cat.color) || [],
         borderWidth: 2,
         borderColor: '#ffffff',
         hoverOffset: 4,
@@ -160,18 +185,31 @@ export default function Dashboard() {
   }
 
   const lineChartData = {
-    labels: stats?.monthlyTrend.map(item => 
+    labels: stats?.expenseMonthlyTrend.map(item => 
       new Date(item.month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     ) || [],
     datasets: [
       {
         label: 'Monthly Spending',
-        data: stats?.monthlyTrend.map(item => item.total) || [],
-        borderColor: '#3B82F6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        data: stats?.expenseMonthlyTrend.map(item => item.total) || [],
+        borderColor: 'rgb(239, 68, 68)',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
         tension: 0.4,
         fill: true,
-        pointBackgroundColor: '#3B82F6',
+        pointBackgroundColor: 'rgb(239, 68, 68)',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+      },
+      {
+        label: 'Monthly Income',
+        data: stats?.incomeMonthlyTrend.map(item => item.total) || [],
+        borderColor: 'rgb(34, 197, 94)',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: 'rgb(34, 197, 94)',
         pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
         pointRadius: 5,
@@ -251,12 +289,12 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Categories</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats?.categoryStats.length || 0}
+                <p className="text-sm font-medium text-gray-600">Total Income</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatCurrency(stats?.totalIncome || 0, userCurrency as Currency)}
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-blue-600" />
+              <TrendingUp className="h-8 w-8 text-green-600" />
             </div>
           </div>
 
@@ -292,12 +330,12 @@ export default function Dashboard() {
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Pie Chart */}
+          {/* Expense Pie Chart */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Spending by Category</h3>
             <div className="h-64">
-              {stats?.categoryStats.length ? (
-                <Pie data={pieChartData} options={pieChartOptions} />
+              {stats?.expenseCategoryStats.length ? (
+                <Pie data={expensePieChartData} options={pieChartOptions} />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-500">
                   No expenses yet
@@ -306,18 +344,32 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Line Chart */}
+          {/* Income Pie Chart */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Trend</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Income by Category</h3>
             <div className="h-64">
-              {stats?.monthlyTrend.length ? (
-                <Line data={lineChartData} options={lineChartOptions} />
+              {stats?.incomeCategoryStats.length ? (
+                <Pie data={incomePieChartData} options={pieChartOptions} />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-500">
-                  No data available
+                  No income yet
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Line Chart */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Income vs Expenses</h3>
+          <div className="h-64">
+            {(stats?.expenseMonthlyTrend.length || stats?.incomeMonthlyTrend.length) ? (
+              <Line data={lineChartData} options={lineChartOptions} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No data available
+              </div>
+            )}
           </div>
         </div>
 

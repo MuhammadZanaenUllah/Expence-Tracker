@@ -52,6 +52,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   expenses      Expense[]
+  incomes       Income[]
   subscription  Subscription?
 }
 
@@ -74,6 +75,17 @@ model Category {
   expenses  Expense[]
 }
 
+model IncomeCategory {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  color     String    @default("#10B981")
+  icon      String    @default("💰")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  incomes   Income[]
+}
+
 model Expense {
   id          String   @id @default(cuid())
   title       String
@@ -89,6 +101,27 @@ model Expense {
   
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([date])
+  @@index([categoryId])
+}
+
+model Income {
+  id          String   @id @default(cuid())
+  title       String
+  amount      Float
+  currency    String   @default("USD")
+  description String?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  categoryId String
+  category   IncomeCategory @relation(fields: [categoryId], references: [id])
 
   @@index([userId])
   @@index([date])
