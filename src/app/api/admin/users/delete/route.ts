@@ -49,6 +49,11 @@ export async function DELETE(request: NextRequest) {
         where: { userId }
       });
 
+      // Delete user's income
+      await tx.income.deleteMany({
+        where: { userId }
+      });
+
       // Delete user's subscription
       await tx.subscription.deleteMany({
         where: { userId }
